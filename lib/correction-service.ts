@@ -12,30 +12,38 @@ interface IndexData {
 // DATA TABLES (Simplified for Portability - Real app would allow CSV upload or API)
 // ------------------------------------------------------------------
 
-// SELIC (Accumulated Monthly)
+// SELIC (Accumulated Monthly %) - Source: Receita Federal / BCB
+// Expanded to cover 5 years (Prescription period)
 const SELIC_TABLE: Record<string, number> = {
-    "2025-01": 0.90, "2024-12": 0.88, "2024-11": 0.80, "2024-10": 0.93, "2024-09": 0.84,
+    // 2025 (Projected/Real)
+    "2025-01": 0.90, "2025-02": 0.85,
+    // 2024
+    "2024-12": 0.88, "2024-11": 0.80, "2024-10": 0.93, "2024-09": 0.84,
     "2024-08": 0.87, "2024-07": 0.91, "2024-06": 0.79, "2024-05": 0.83, "2024-04": 0.89,
-    "2024-03": 0.83, "2024-02": 0.80, "2024-01": 0.97, "2023-12": 0.89, "2023-11": 0.92,
-    "2023-10": 1.00, "2023-09": 0.97, "2023-08": 1.14, "2023-07": 1.07, "2023-06": 1.07,
-    "2023-05": 1.12, "2023-04": 0.92, "2023-03": 1.17, "2023-02": 0.92, "2023-01": 1.12,
+    "2024-03": 0.83, "2024-02": 0.80, "2024-01": 0.97,
+    // 2023
+    "2023-12": 0.89, "2023-11": 0.92, "2023-10": 1.00, "2023-09": 0.97, "2023-08": 1.14,
+    "2023-07": 1.07, "2023-06": 1.07, "2023-05": 1.12, "2023-04": 0.92, "2023-03": 1.17,
+    "2023-02": 0.92, "2023-01": 1.12,
+    // 2022
     "2022-12": 1.12, "2022-11": 1.02, "2022-10": 1.02, "2022-09": 1.07, "2022-08": 1.17,
     "2022-07": 1.03, "2022-06": 1.02, "2022-05": 1.03, "2022-04": 0.83, "2022-03": 0.93,
-    "2022-02": 0.76, "2022-01": 0.73
+    "2022-02": 0.76, "2022-01": 0.73,
+    // 2021
+    "2021-12": 0.77, "2021-11": 0.59, "2021-10": 0.49, "2021-09": 0.44, "2021-08": 0.43,
+    "2021-07": 0.36, "2021-06": 0.31, "2021-05": 0.27, "2021-04": 0.21, "2021-03": 0.20,
+    "2021-02": 0.13, "2021-01": 0.15,
+    // 2020
+    "2020-12": 0.16, "2020-11": 0.15, "2020-10": 0.16, "2020-09": 0.16, "2020-08": 0.16,
+    "2020-07": 0.19, "2020-06": 0.21, "2020-05": 0.24, "2020-04": 0.28, "2020-03": 0.34,
+    "2020-02": 0.29, "2020-01": 0.38
 };
 
-// IPCA-E (Estimates/Samples for fallback)
-const IPCA_E_TABLE: Record<string, number> = {
-    // 2024
-    "2024-12": 0.50, "2024-11": 0.30, "2024-10": 0.50, "2024-09": 0.40,
-    "2024-08": 0.20, "2024-07": 0.40, "2024-06": 0.21, "2024-05": 0.46,
-    // ... Older values generic fallback
-};
-
-// INPC
-const INPC_TABLE: Record<string, number> = {
-    // 2024
-    "2024-12": 0.60, "2024-11": 0.40,
+// IPCA-E / INPC (Simplified Samples)
+const IPCA_TABLE: Record<string, number> = {
+    "2024-12": 0.50, "2024-11": 0.30, "2024-10": 0.50, "2024-09": 0.40, "2024-08": 0.20,
+    "2024-07": 0.40, "2024-06": 0.21, "2024-05": 0.46, "2024-04": 0.38, "2024-03": 0.16,
+    // Fallback for others
 };
 
 export interface CorrectionResult {
@@ -73,12 +81,16 @@ export class CorrectionService {
         // 1. Calculate Monetary Correction (Index Adjustment)
         // -------------------------------------------------
         let accumulatedIndex = 0;
+
+        // Logic: Start from the month FOLLOWING the due date, OR pro-rata?
+        // Standard Simplification: If due date is 10/04/2021, correction starts 01/05/2021 for monthly indices.
+        // Some systems use daily pro-rata for SELIC.
+        // Here we stick to Monthly Accumulation for stability.
+
         const currentIter = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
         const endIter = new Date(calcDate.getFullYear(), calcDate.getMonth(), 1);
 
-        // Move to NEXT month to start correcting? 
-        // Typically correction starts month following due date OR pro-rata?
-        // Simpler: Start strictly next month.
+        // Advance to next month to begin index accumulation
         currentIter.setMonth(currentIter.getMonth() + 1);
 
         while (currentIter <= endIter) {
@@ -88,11 +100,9 @@ export class CorrectionService {
 
             let rate = 0;
             if (correctionType === 'SELIC') {
-                rate = SELIC_TABLE[key] || 0.8; // Fallback 0.8%
-            } else if (correctionType === 'IPCA-E') {
-                rate = IPCA_E_TABLE[key] || 0.4; // Fallback 0.4%
-            } else if (correctionType === 'INPC') {
-                rate = INPC_TABLE[key] || 0.4; // Fallback 0.4%
+                rate = SELIC_TABLE[key] || 0.5; // Fallback 0.5%
+            } else {
+                rate = IPCA_TABLE[key] || 0.3; // Fallback 0.3%
             }
 
             accumulatedIndex += rate;
@@ -105,8 +115,8 @@ export class CorrectionService {
 
         // 2. Calculate Interest
         // ----------------------------------------------------
-        // Rule: Juros acumulados a partir da DATA DE VENCIMENTO (User Requirement)
-        // Note: Standard Labor Law is often "Ajuizamento", but user enforced "Vencimento".
+        // Rule: Juros acumulados a partir da DATA DE VENCIMENTO acumulativamente (Simple Accumulation)
+        // Formula: Days * (Rate / 30)
 
         let interestAmount = 0;
         let interestTotalRate = 0;
@@ -117,14 +127,17 @@ export class CorrectionService {
             if (calcDate > dueDate) {
                 const diffTime = Math.abs(calcDate.getTime() - dueDate.getTime());
                 diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const diffMonths = diffDays / 30; // Standard Commercial Month (30 days)
 
-                let interestRatePerMonth = 0.0;
-                if (interestType === '1%_SIMPLE') interestRatePerMonth = 1.0;
-                if (interestType === '0.5%_SIMPLE') interestRatePerMonth = 0.5;
+                // Rate determination
+                let annualRate = 0;
+                if (interestType === '1%_SIMPLE') annualRate = 12.0; // 1% per month = 12% year
+                if (interestType === '0.5%_SIMPLE') annualRate = 6.0;
 
-                // Simple Interest: Principal * Rate * Time
-                interestTotalRate = (interestRatePerMonth * diffMonths) / 100;
+                // Daily Rate (Simple) = Monthly / 30
+                const dailyRate = (annualRate / 12) / 30;
+
+                // Total Rate = Days * DailyRate
+                interestTotalRate = (diffDays * dailyRate) / 100;
 
                 // Interest applied on CORRECTED Principal (Súmula 200 TST)
                 interestAmount = correctedPrincipal * interestTotalRate;

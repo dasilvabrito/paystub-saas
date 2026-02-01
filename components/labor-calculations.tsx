@@ -115,7 +115,13 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
             if (month > 12) month = 12;
 
             const refDate = new Date(year, month - 1, 1);
-            const dueDate = getEighthDayNextMonth(refDate);
+            // RULE: Vencimento dia 10 do mês seguinte
+            // (10th of MM+1)
+            const nextMonth = new Date(refDate);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            nextMonth.setDate(10);
+
+            const dueDate = nextMonth;
 
             // Calculate using new Service
             const calc = CorrectionService.calculate(item.valor, dueDate, correctionIndex, interestRate);
@@ -127,56 +133,30 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                 ...item,
                 valorCorrigido: calc.correctedValue, // Base + Correction
                 valorJuros: calc.interestAmount,
-                valorTotal: calc.totalValue,
+                valorTotal: calc.totalValue, // Base + Correction + Interest
+                dueDate: dueDate, // Store for reference
                 correctionInfo: calc
             };
         });
 
-        // Multa 40% on (Corrected + Interest) ??
-        // Usually fine is on the updated balance (Correction included). Interest on fine is separate.
-        // Let's assume Multa is 40% of the total available (Principal + Correction).
-        // Then we apply interest to the multa as well?
-        // Simplification: Calculate Multa based on Total Corrigido, then apply Interest to Multa.
+        // Multa 40% Calculation Rule
+        // User Request: "a multa é calculada somente sobre a soma do valor devido"
+        // Interpretation: Multa Base = Sum of ORIGINAL monthly deposits (before correction/interest).
 
-        const baseParaMulta = fgtsMensalCorrigido.reduce((acc, curr) => acc + curr.valorCorrigido, 0);
-        const multa40Principal = baseParaMulta * 0.4;
+        const sumOriginalDeposits = result.fgts.depositos; // This is the sum of original "valor"
+        const multaFinal = sumOriginalDeposits * 0.4;
 
-        // We should calculate correction/interest for Multa explicitly if we want rigorousness,
-        // but Multa uses the same "Era" as the deposits? No, Multa is due at Rescisao?
-        // Let's use Rescisao Date for Multa Interest/Correction?
-        // Or user standard practice: 40% of Updated Balance.
-
-        // Start Simple: Multa is 40% of (Principal + Correction).
-        // Interest on Multa: Same rate * Multa.
-        // BUT from when? From Rescisao Date.
-
-        const demissionDateObj = demissao ? new Date(demissao + "T00:00:00") : new Date();
-        const rescisaoDueDate = getTenthBusinessDayNextMonth(demissionDateObj);
-
-        // Calculate Interest on Multa separately?
-        // Let's just CorrectionService the Multa Amount (Principal) from Rescisao Date?
-        // No, Multa base is already corrected.
-        // So just Interest?
-        // CorrectionService can handle "0 correction" if we manually handled it?
-        // Let's rely on simple interest calc for Multa from Rescisao Date.
-        // Or treat Multa like a Rescisao item.
-
-        // Re-approach: Treat Multa as a Rescisao Item for interest purposes.
-        const multaCalc = CorrectionService.calculate(multa40Principal, rescisaoDueDate, 'SELIC', interestRate);
-        // Wait, if we use SELIC on Multa, we leverage the table again. But principal is already bumped.
-        // Avoid double correction.
-        // Logic: mult40Principal is ALREADY updated to today.
-        // So we just need Interest from Rescisao Date if applicable?
-        // Actually, if using SELIC (which includes interest), we shouldn't add more interest if dates overlap.
-        // Let's simplify: Multa = 40% of Total Value (including interest) or 40% of Principal+Corr?
-        // Standard: 40% sobre o saldo da conta vinculada devidamente corrigida.
+        // NOTE: We are NOT applying correction/interest to the Multa itself based on this request,
+        // unless implies Multa should be corrected from Rescisao?
+        // Staying strict to: Multa = Original * 0.4.
 
         const totalFgtsFinal = fgtsMensalCorrigido.reduce((acc, curr) => acc + curr.valorTotal, 0);
-        const multaFinal = totalFgtsFinal * 0.4; // Valid simplification?
-        // Usually: (Deposits + Correction) * 40%. Interest separate.
 
+        // Alias for compatibility with return object
+        const baseParaMulta = totalFgtsFinal;
 
-        // Let's trust the "valorTotal" from service for the deposits.
+        // Total = Sum(Deeply Corrected Monthly Deposits) + Multa(Original * 0.4)
+        // (Note: This separates the 'Principal' pot from the 'Fine' pot logic)
 
 
         // 2. Severance Correction
@@ -184,6 +164,9 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
         const feriasVal = result.ferias.valor;
         const reflexoVal = result.avisoPrevio.reflexoFgts;
         const totalRescisaoOriginal = avisoVal + feriasVal + reflexoVal;
+
+        const demissionDateObj = demissao ? new Date(demissao + "T00:00:00") : new Date();
+        const rescisaoDueDate = getTenthBusinessDayNextMonth(demissionDateObj);
 
         const correctionRescisao = CorrectionService.calculate(
             totalRescisaoOriginal,
