@@ -1,23 +1,9 @@
-
 import jsPDF from "jspdf";
-import "jspdf-autotable"; // Side effect import to attach to jsPDF prototype
+import autoTable from "jspdf-autotable";
 import { ExtractedData } from "./extractors";
 import { formatCurrency, parseCurrency, parseInfo } from "./math-utils";
 import { LaborCalculationResult } from "./labor-calculations";
 
-// Helper to safely call autoTable
-const safeAutoTable = (doc: jsPDF, options: any) => {
-    try {
-        if ((doc as any).autoTable) {
-            (doc as any).autoTable(options);
-        } else {
-            console.warn("AutoTable plugin not found on jsPDF instance");
-        }
-    } catch (e) {
-        console.error("AutoTable generation failed:", e);
-        throw e; // Re-throw to alert user
-    }
-};
 
 interface ReportTotals {
     totalDevidas: number;
@@ -283,7 +269,7 @@ export const generateAuditReport = (
         ]
     ];
 
-    safeAutoTable(doc, {
+    autoTable(doc, {
         startY: currentY,
         head: tableHead,
         body: finalRows,
@@ -469,7 +455,7 @@ export const generateSeveranceReport = (
         );
     }
 
-    safeAutoTable(doc, {
+    autoTable(doc, {
         startY: currentY,
         head: tableHead,
         body: tableBody,
@@ -628,7 +614,7 @@ export const generateFGTSReport = (
             ]
         ];
 
-        safeAutoTable(doc, {
+        autoTable(doc, {
             startY: currentY,
             head: tableHead,
             body: tableBody,
@@ -668,7 +654,7 @@ export const generateFGTSReport = (
             ["TOTAL A RECEBER", "-", "-", formatCurrency(result.fgts.total + result.fgts.multa40), "-"]
         ];
 
-        safeAutoTable(doc, {
+        autoTable(doc, {
             startY: currentY,
             head: tableHead,
             body: tableBody,
