@@ -7,7 +7,10 @@ import { LockKeyhole, Loader2 } from "lucide-react";
 
 import Image from "next/image";
 
+import logo from "./logo.png";
+
 export default function LoginPage() {
+    // ... existing state ...
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -17,6 +20,7 @@ export default function LoginPage() {
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
+        // ...
         e.preventDefault();
         setLoading(true);
         setError("");
@@ -42,7 +46,7 @@ export default function LoginPage() {
                 <div className="flex flex-col items-center text-center">
                     <div className="relative w-48 h-32 mb-4">
                         <img
-                            src="/logo.png"
+                            src={logo.src}
                             alt="Brito & Santos Advocacia"
                             className="w-full h-full object-contain"
                         />
