@@ -124,16 +124,16 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-start pt-24 pb-12 px-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800 via-background to-background relative">
+    <main className="min-h-screen flex flex-col items-center justify-start pt-24 pb-12 px-4 bg-background relative">
 
       {/* Top Bar */}
       <div className="absolute top-4 right-4 flex items-center gap-4">
-        <span className="text-sm text-zinc-400">
-          Olá, <span className="text-white font-medium">{user.name}</span>
+        <span className="text-sm text-muted-foreground">
+          Olá, <span className="text-primary font-medium">{user.name}</span>
         </span>
         <button
           onClick={logout}
-          className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+          className="p-2 text-muted-foreground hover:text-primary bg-primary/5 hover:bg-primary/10 rounded-full transition-colors"
           title="Sair"
         >
           <LogOut className="w-5 h-5" />
@@ -144,16 +144,16 @@ export default function Home() {
       <UserManagement />
 
       {/* Header */}
-      <div className="text-center space-y-4 mb-12 max-w-2xl mx-auto">
-        <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-4">
-          <Sparkles className="mr-1 h-3 w-3" />
-          Análise Inteligente v2.0
+      <div className="text-center space-y-4 mb-12 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="inline-flex items-center rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary mb-4">
+          <Sparkles className="mr-1.5 h-3 w-3 text-accent" />
+          Sistema de Cálculos Trabalhistas
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
-          Extrator de Contracheque
+        <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-primary">
+          Brito & Santos <span className="text-accent">Advocacia</span>
         </h1>
-        <p className="text-zinc-400 text-lg">
-          Processamento totalmente local e seguro.
+        <p className="text-muted-foreground text-lg">
+          Auditoria de contracheques e cálculos rescisórios precisos.
         </p>
       </div>
 
@@ -164,7 +164,8 @@ export default function Home() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-8 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 max-w-xl mx-auto text-center">
+        <div className="mb-8 p-4 rounded-lg bg-red-50 border border-red-200 text-red-600 max-w-xl mx-auto text-center flex items-center justify-center gap-2">
+          <LogOut className="w-4 h-4 rotate-180" /> {/* Just an alert icon */}
           {error}
         </div>
       )}
@@ -172,14 +173,15 @@ export default function Home() {
       {/* Results Section */}
       {data.length > 0 && (
         <div className="w-full max-w-6xl animate-in fade-in zoom-in-95 duration-500 space-y-12">
+          {/* We might need to style EditableTable if it has hardcoded dark colors */}
           <EditableTable initialData={data} onDelete={handleDelete} />
           <LaborCalculations data={data} />
         </div>
       )}
 
       {/* Footer */}
-      <div className="mt-auto pt-20 text-center text-zinc-600 text-sm">
-        <p>&copy; 2026 SaaS Paystub Extractor. Segurança e Rapidez.</p>
+      <div className="mt-auto pt-20 text-center text-muted-foreground/60 text-xs uppercase tracking-widest">
+        <p>&copy; {new Date().getFullYear()} Brito & Santos Advocacia. Todos os direitos reservados.</p>
       </div>
     </main>
   );

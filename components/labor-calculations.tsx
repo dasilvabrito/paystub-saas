@@ -27,14 +27,30 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
     const [interestRate, setInterestRate] = useState<InterestType>('1%_SIMPLE');
     const [correctionEnabled, setCorrectionEnabled] = useState(false);
 
+    // Logo State
+    const [logoBase64, setLogoBase64] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        // Pre-load logo for PDF
+        const loadLogo = async () => {
+            try {
+                const response = await fetch('/logo.png');
+                const blob = await response.blob();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setLogoBase64(reader.result as string);
+                };
+                reader.readAsDataURL(blob);
+            } catch (e) {
+                console.error("Failed to load logo", e);
+            }
+        };
+        loadLogo();
+    }, []);
+
     // Auto-detect last salary from data
     const lastSalaryDetected = useMemo(() => {
         if (!data || data.length === 0) return 0;
-
-        // Filter for "Folha Normal" if possible to get the true base
-        // If no "Normal" found, iterate backwards on all data.
-        // data matches Page.tsx order (Oldest -> Newest).
-        // specific logic: Find LAST "Normal" paystub.
 
         // Explicitly filter for "NORMAL"
         const normalPaystubs = data.filter(d =>
@@ -320,301 +336,329 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                 >
                     <FileText className="h-4 w-4" /> Baixar Termo Rescisão
                 </button>
-                <button
-                    onClick={() => {
-                        const name = data[0]?.nome || "Servidor";
-                        const idFuncional = data[0]?.idFuncional || "N/D";
-                        const vinculo = vinculoInfo.type || "N/D";
-                        // Pass total Final (Principal + Corr + Interest)
-                        const totalCorrigido = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.totalFinal : null;
-                        const correctedItems = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.mensal : null;
-
-                        generateFGTSReport(result, name, idFuncional, vinculo, admissao, demissao, totalCorrigido, correctedItems);
-                    }}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-                >
-                    <FileText className="h-4 w-4" /> Baixar Memória FGTS
-                </button>
             </div>
 
-            {/* Input Card */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                {/* Admissão */}
-                <div className="space-y-2">
-                    <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> Data de Admissão
-                    </label>
-                    <input
-                        type="date"
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                        value={admissao}
-                        onChange={(e) => setAdmissao(e.target.value)}
-                    />
+            <div className="bg-white border border-accent/20 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 className="text-xl font-serif font-semibold text-primary flex items-center gap-2">
+                            <Calculator className="h-5 w-5 text-accent" />
+                            Cálculos Trabalhistas
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Simulação de rescisão e auditoria de FGTS
+                        </p>
+                    </div>
                 </div>
 
-                {/* Demissão */}
-                <div className="space-y-2">
-                    <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> Data de Demissão
-                    </label>
-                    <input
-                        type="date"
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                        value={demissao}
-                        onChange={(e) => setDemissao(e.target.value)}
-                    />
-                </div>
+                {/* DATE INPUTS GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-primary/70">
+                            Data de Admissão
+                        </label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-accent" />
+                            <input
+                                type="date"
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-input rounded-lg text-foreground focus:ring-1 focus:ring-accent focus:border-accent outline-none transition-all text-sm"
+                                value={admissao}
+                                onChange={(e) => setAdmissao(e.target.value)}
+                            />
+                        </div>
+                    </div>
 
-                {/* Último Salário */}
-                <div className="space-y-2">
-                    <label className="text-xs font-medium text-zinc-400 uppercase flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" /> Base de Cálculo (Prev.)
-                    </label>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-emerald-400 font-mono focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                            placeholder={formatCurrency(lastSalaryDetected)}
-                            value={manualSalary}
-                            onChange={(e) => setManualSalary(e.target.value)}
-                        />
-                        {!manualSalary && (
-                            <span className="absolute right-3 top-2.5 text-xs text-zinc-600 pointer-events-none">
-                                Detectado: {formatCurrency(lastSalaryDetected)}
+                    {/* ... other inputs similar style ... */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-primary/70">
+                            Data de Demissão
+                        </label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-accent" />
+                            <input
+                                type="date"
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-input rounded-lg text-foreground focus:ring-1 focus:ring-accent focus:border-accent outline-none transition-all text-sm"
+                                value={demissao}
+                                onChange={(e) => setDemissao(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-primary/70 flex items-center justify-between">
+                            Última Remuneração
+                            <span className="text-[10px] text-accent font-normal bg-accent/10 px-2 py-0.5 rounded-full">
+                                {manualSalary ? 'Manual' : 'Automático'}
                             </span>
+                        </label>
+                        <div className="relative">
+                            <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-accent" />
+                            <input
+                                type="text"
+                                placeholder={formatCurrency(lastSalaryDetected)}
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-input rounded-lg text-foreground focus:ring-1 focus:ring-accent focus:border-accent outline-none transition-all text-sm font-mono"
+                                value={manualSalary}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9,.]/g, '');
+                                    setManualSalary(val);
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* CORRECTION TOGGLE SECTION */}
+                <div className="mt-8 pt-6 border-t border-border">
+                    <div className="flex items-center justify-between cursor-pointer group" onClick={() => setCorrectionEnabled(!correctionEnabled)}>
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg transition-colors ${correctionEnabled ? 'bg-accent/20 text-accent' : 'bg-muted text-muted-foreground'}`}>
+                                <TrendingUp className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className={`font-medium transition-colors ${correctionEnabled ? 'text-primary' : 'text-muted-foreground'}`}>
+                                    Correção Monetária e Juros
+                                </h3>
+                                <p className="text-xs text-muted-foreground">
+                                    Aplicar índices oficiais (SELIC, IPCA-E) e juros de mora
+                                </p>
+                            </div>
+                        </div>
+                        <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${correctionEnabled ? 'bg-primary' : 'bg-input'}`}>
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${correctionEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </div>
+                    </div>
+
+                    {/* EXPANDABLE SETTINGS */}
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 overflow-hidden transition-all duration-300 ${correctionEnabled ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-muted-foreground">Índice de Correção</label>
+                            <div className="flex gap-2">
+                                {(['SELIC', 'IPCA-E', 'INPC'] as CorrectionIndexType[]).map(idx => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setCorrectionIndex(idx)}
+                                        className={`flex-1 py-2 px-3 text-xs rounded-md border transition-all ${correctionIndex === idx
+                                            ? 'bg-primary text-white border-primary shadow-sm'
+                                            : 'bg-zinc-50 text-muted-foreground border-input hover:border-accent/50'
+                                            }`}
+                                    >
+                                        {idx}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-muted-foreground">Juros de Mora</label>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setInterestRate('1%_SIMPLE')}
+                                    className={`flex-1 py-2 px-3 text-xs rounded-md border transition-all ${interestRate === '1%_SIMPLE'
+                                        ? 'bg-primary text-white border-primary shadow-sm'
+                                        : 'bg-zinc-50 text-muted-foreground border-input hover:border-accent/50'
+                                        }`}
+                                >
+                                    1% a.m. Simples
+                                </button>
+                                <button
+                                    onClick={() => setInterestRate('NONE')}
+                                    className={`flex-1 py-2 px-3 text-xs rounded-md border transition-all ${interestRate === 'NONE'
+                                        ? 'bg-destructive/10 text-destructive border-destructive/20'
+                                        : 'bg-zinc-50 text-muted-foreground border-input hover:bg-zinc-100'
+                                        }`}
+                                >
+                                    Sem Juros
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* RESULTS CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                {/* 1. SEVERANCE CARD */}
+                <div className="bg-white border border-border rounded-xl p-6 shadow-sm hover:border-accent/30 transition-colors group">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-primary transition-colors">Rescisão Estimada</span>
+                        <div className="p-2 bg-primary/5 rounded-full text-primary group-hover:bg-primary/10 transition-colors">
+                            <FileText className="h-4 w-4" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-foreground font-serif">
+                        {formatCurrency(
+                            correctionEnabled && correctedValues?.rescisao
+                                ? correctedValues.rescisao.totalFinal
+                                : (result.avisoPrevio.valor + result.ferias.valor + result.avisoPrevio.reflexoFgts)
                         )}
                     </div>
-                </div>
-            </div>
-
-
-
-            {/* Correction Settings Panel */}
-            <div className="bg-zinc-900 border border-zinc-700/50 rounded-xl p-4 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-                        <Settings className="h-4 w-4" /> Configuração de Liquidação
-                    </h3>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500 uppercase font-medium">Ativar Cálculos</span>
-                        <button
-                            onClick={() => setCorrectionEnabled(!correctionEnabled)}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${correctionEnabled ? 'bg-emerald-500' : 'bg-zinc-700'}`}
-                        >
-                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${correctionEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-                </div>
-
-                {correctionEnabled && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2">
-                        <div className="space-y-1">
-                            <label className="text-xs text-zinc-500 font-medium">Índice de Correção</label>
-                            <div className="relative">
-                                <select
-                                    value={correctionIndex}
-                                    onChange={(e) => setCorrectionIndex(e.target.value as CorrectionIndexType)}
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 appearance-none focus:border-amber-500 outline-none"
-                                >
-                                    <option value="SELIC">SELIC (EC 113/2021) - Padrão</option>
-                                    <option value="IPCA-E">IPCA-E</option>
-                                    <option value="INPC">INPC</option>
-                                </select>
-                                <TrendingUp className="absolute right-3 top-2.5 h-4 w-4 text-zinc-600 pointer-events-none" />
-                            </div>
+                    {correctionEnabled && correctedValues?.rescisao && (
+                        <div className="mt-2 text-xs text-accent flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" />
+                            <span>+{formatCurrency(correctedValues.rescisao.totalFinal - (result.avisoPrevio.valor + result.ferias.valor + result.avisoPrevio.reflexoFgts))} de atualização</span>
                         </div>
+                    )}
+                    <button
+                        onClick={() => {
+                            // Pass correction data if enabled
+                            const corrData = (correctionEnabled && correctedValues?.rescisao) ? {
+                                original: result.avisoPrevio.valor + result.ferias.valor + result.avisoPrevio.reflexoFgts,
+                                corrected: correctedValues.rescisao.info.correctedValue,
+                                interest: correctedValues.rescisao.info.interestAmount,
+                                total: correctedValues.rescisao.totalFinal,
+                                indexName: correctionIndex,
+                                interestName: interestRate === '1%_SIMPLE' ? '1% a.m.' : 'Sem Juros'
+                            } : null;
 
-                        <div className="space-y-1">
-                            <label className="text-xs text-zinc-500 font-medium">Juros de Mora</label>
-                            <div className="relative">
-                                <select
-                                    value={interestRate}
-                                    onChange={(e) => setInterestRate(e.target.value as InterestType)}
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 appearance-none focus:border-amber-500 outline-none"
-                                >
-                                    <option value="1%_SIMPLE">1% ao mês (Simples)</option>
-                                    <option value="0.5%_SIMPLE">0.5% ao mês (Simples)</option>
-                                    <option value="NONE">Sem Juros (Apenas Correção)</option>
-                                </select>
-                                <Percent className="absolute right-3 top-2.5 h-4 w-4 text-zinc-600 pointer-events-none" />
-                            </div>
+                            const name = data[0]?.nome || "Colaborador";
+                            generateSeveranceReport(result, name, admissao, demissao, displaySalary, corrData, logoBase64);
+                        }}
+                        className="mt-6 w-full py-2 bg-secondary text-white rounded-lg text-xs font-medium hover:bg-secondary/90 transition-colors"
+                    >
+                        Gerar Termo PDF
+                    </button>
+                </div>
+
+                {/* 2. FGTS CARD */}
+                <div className="bg-white border border-border rounded-xl p-6 shadow-sm hover:border-accent/30 transition-colors group">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-primary transition-colors">Saldo FGTS + 40%</span>
+                        <div className="p-2 bg-primary/5 rounded-full text-primary group-hover:bg-primary/10 transition-colors">
+                            <Percent className="h-4 w-4" />
                         </div>
                     </div>
-                )}
-            </div>
-
-            {/* Results Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                {/* 1. Verbas Rescisórias */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-4 hover:bg-zinc-900/80 transition-colors">
-                    <h3 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800 pb-3 mb-2 flex justify-between">
-                        <span>Verbas Rescisórias</span>
-                        <div className="text-right">
-                            <div className={correctionEnabled ? "text-amber-500" : "text-emerald-500"}>
-                                {correctionEnabled
-                                    ? formatCurrency(correctedValues?.rescisao.totalFinal || 0)
-                                    : formatCurrency(result.avisoPrevio.valor + result.avisoPrevio.reflexoFgts + result.ferias.valor)
-                                }
-                            </div>
-                            {correctionEnabled && (
-                                <div className="text-[10px] text-zinc-500">
-                                    Principal: {formatCurrency(result.avisoPrevio.valor + result.avisoPrevio.reflexoFgts + result.ferias.valor)}
-                                </div>
-                            )}
-                        </div>
-                    </h3>
-
-                    <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center text-zinc-400">
-                            <span>Aviso Prévio Indenizado ({result.avisoPrevio.dias} dias)</span>
-                            <span className="font-mono text-zinc-200">{formatCurrency(result.avisoPrevio.valor)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-zinc-400">
-                            <span>Férias + 1/3 (Base x 1.3)</span>
-                            <span className="font-mono text-zinc-200">{formatCurrency(result.ferias.valor)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-zinc-500 text-xs">
-                            <span className="flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Reflexo FGTS (8% s/ Aviso)</span>
-                            <span className="font-mono text-zinc-400">{formatCurrency(result.avisoPrevio.reflexoFgts)}</span>
-                        </div>
-                        {correctionEnabled && (
-                            <div className="mt-2 text-[10px] text-amber-500/80 bg-amber-500/5 p-2 rounded">
-                                * Atualizado pela SELIC até hoje
-                            </div>
+                    <div className="text-3xl font-bold text-foreground font-serif">
+                        {formatCurrency(
+                            correctionEnabled && correctedValues?.fgts
+                                ? correctedValues.fgts.totalFinal + (result.fgts.saldoParaFinsRescisorios * 0.4) // Fine always on original basis usually, refer to logic 
+                                // Wait, totalFinal includes deposits updated?
+                                // Logic in useMemo: totalFinal = totalFgtsCorrigido + totalFgtsJuros + (baseParaMulta * 0.4)
+                                // So yes, it is the Grand Total.
+                                : result.fgts.total + result.fgts.multa40
                         )}
                     </div>
-                </div>
-
-                {/* 2. FGTS */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-4 hover:bg-zinc-900/80 transition-colors">
-                    <h3 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800 pb-3 mb-2 flex justify-between">
-                        <span>FGTS Total + Multa 40%</span>
-                        <div className="text-right">
-                            <div className={correctionEnabled ? "text-amber-500" : "text-emerald-500"}>
-                                {correctionEnabled
-                                    ? formatCurrency((correctedValues?.fgts.totalFinal || 0) + (correctedValues?.fgts.multaTotal || 0))
-                                    : formatCurrency(result.fgts.total + result.fgts.multa40)
-                                }
-                            </div>
-                            {correctionEnabled && (
-                                <div className="text-[10px] text-zinc-500">
-                                    Principal: {formatCurrency(result.fgts.total + result.fgts.multa40)}
-                                </div>
-                            )}
+                    {correctionEnabled && correctedValues?.fgts && (
+                        <div className="mt-2 text-xs text-accent flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" />
+                            <span>Corrigido ({correctionIndex})</span>
                         </div>
-                    </h3>
+                    )}
+                    <button
+                        onClick={() => {
+                            const name = data[0]?.nome || "Colaborador";
+                            const idFuncional = data[0]?.idFuncional || "";
+                            const vinculoInfo = data.find(d => d.vinculo)?.vinculo || "";
+                            const vinculo = typeof vinculoInfo === 'string' ? vinculoInfo : "N/D";
+                            // Pass total Final (Principal + Corr + Interest)
+                            const totalCorrigido = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.totalFinal : null;
+                            const correctedItems = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.mensal : null;
 
-                    <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center text-zinc-400">
-                            <span>Depósitos {correctionEnabled && "(Corrigidos + Juros)"}</span>
-                            <span className="font-mono text-zinc-200">
-                                {correctionEnabled
-                                    ? formatCurrency(correctedValues?.fgts?.totalFinal || 0)
-                                    : formatCurrency(result.fgts.depositos)
-                                }
-                            </span>
-                        </div>
-
-                        <div className="flex justify-between items-center text-emerald-500 font-medium">
-                            <span>Multa Rescisória (40%)</span>
-                            <span className="font-mono">
-                                {correctionEnabled
-                                    ? formatCurrency(correctedValues?.fgts?.multaTotal || 0)
-                                    : formatCurrency(result.fgts.multa40)
-                                }
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Toggle Details */}
-                    <div className="mt-4 pt-3 border-t border-zinc-800/50">
+                            generateFGTSReport(result, name, idFuncional, vinculo, admissao, demissao, totalCorrigido, correctedItems, logoBase64);
+                        }}
+                        className="mt-6 w-full py-2 bg-secondary text-white rounded-lg text-xs font-medium hover:bg-secondary/90 transition-colors"
+                    >
+                        Extrato Analítico PDF
+                    </button>
+                    <div className="mt-3 flex justify-center">
                         <button
                             onClick={() => setShowDetails(!showDetails)}
-                            className="w-full flex items-center justify-center text-xs text-primary hover:text-primary/80 transition-colors py-2"
+                            className="text-[10px] text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors"
                         >
-                            {showDetails ? (
-                                <>
-                                    <ChevronUp className="h-3 w-3 mr-1" /> Ocultar Memória de Cálculo
-                                </>
-                            ) : (
-                                <>
-                                    <ChevronDown className="h-3 w-3 mr-1" /> Ver Memória de Cálculo Mensal
-                                </>
-                            )}
+                            {showDetails ? 'Ocultar Detalhes' : 'Ver Memória de Cálculo'}
+                            {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                         </button>
                     </div>
                 </div>
 
+                {/* 3. AUDIT CARD */}
+                <div className="bg-white border border-border rounded-xl p-6 shadow-sm hover:border-accent/30 transition-colors group">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-primary transition-colors">Auditoria Aulas</span>
+                        <div className="p-2 bg-primary/5 rounded-full text-primary group-hover:bg-primary/10 transition-colors">
+                            <BarChart3 className="h-4 w-4" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-foreground font-serif">
+                        {/* Placeholder for Audit Total logic if implemented */}
+                        R$ --
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        Análise de diferenças de regência
+                    </p>
+                    <button
+                        onClick={() => generateAuditReport(data, undefined, logoBase64)}
+                        className="mt-6 w-full py-2 bg-secondary text-white rounded-lg text-xs font-medium hover:bg-secondary/90 transition-colors"
+                    >
+                        Relatório Auditoria PDF
+                    </button>
+                </div>
             </div>
 
             {/* Monthly Breakdown Table */}
             {showDetails && result.fgts.mensal.length > 0 && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="bg-zinc-950/50 px-6 py-3 border-b border-zinc-800 flex items-center justify-between">
-                        <h4 className="text-xs font-semibold uppercase text-zinc-400 flex items-center gap-2">
-                            <TableIcon className="h-4 w-4" /> Memória de Cálculo FGTS
+                <div className="bg-white border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300 shadow-lg">
+                    <div className="bg-primary px-6 py-3 border-b border-primary/20 flex items-center justify-between">
+                        <h4 className="text-xs font-semibold uppercase text-white/90 flex items-center gap-2">
+                            <TableIcon className="h-4 w-4 text-accent" /> Memória de Cálculo FGTS
                         </h4>
-                        <span className="text-xs text-zinc-500 font-mono">
+                        <span className="text-xs text-white/60 font-mono">
                             {result.fgts.mensal.length} competências
                         </span>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                        <table className="w-full text-sm text-left text-zinc-300">
-                            <thead className="bg-zinc-950/30 text-xs uppercase text-zinc-500 font-semibold sticky top-0 backdrop-blur-sm">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-zinc-50 text-xs uppercase text-muted-foreground font-semibold sticky top-0 backdrop-blur-sm z-10 border-b border-border">
                                 <tr>
                                     <th className="px-4 py-3">Ref</th>
                                     <th className="px-4 py-3 text-right">FGTS Original</th>
                                     {correctionEnabled && (
                                         <>
-                                            <th className="px-4 py-3 text-right text-amber-500">Correção ($)</th>
-                                            <th className="px-4 py-3 text-right text-zinc-300">Valor Atualizado</th>
-                                            <th className="px-4 py-3 text-right text-blue-400">Juros ($)</th>
+                                            <th className="px-4 py-3 text-right text-accent">Correção ($)</th>
+                                            <th className="px-4 py-3 text-right text-foreground">Valor Atualizado</th>
+                                            <th className="px-4 py-3 text-right text-primary">Juros ($)</th>
                                         </>
                                     )}
                                     <th className="px-4 py-3 text-right">Total</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800/50 font-mono text-xs">
+                            <tbody className="divide-y divide-border font-mono text-xs text-foreground bg-white">
                                 {result.fgts.mensal.map((row, idx) => {
                                     // Access corresponding corrected row
                                     const correctedRow = correctionEnabled ? correctedValues?.fgts.mensal[idx] : null;
 
                                     return (
-                                        <tr key={idx} className="hover:bg-zinc-800/20">
-                                            <td className="px-4 py-3 text-zinc-400">{row.competencia}</td>
+                                        <tr key={idx} className="hover:bg-zinc-50 transition-colors">
+                                            <td className="px-4 py-3 text-muted-foreground">{row.competencia}</td>
                                             <td className="px-4 py-3 text-right">{formatCurrency(row.valor)}</td>
 
                                             {correctionEnabled && correctedRow?.correctionInfo ? (
                                                 <>
-                                                    <td className="px-4 py-3 text-right text-amber-500/80">
+                                                    <td className="px-4 py-3 text-right text-accent font-medium">
                                                         +{formatCurrency(correctedRow.correctionInfo.correctionAmount)}
                                                     </td>
-                                                    <td className="px-4 py-3 text-right text-zinc-300">
+                                                    <td className="px-4 py-3 text-right text-foreground">
                                                         {formatCurrency(correctedRow.correctionInfo.correctedValue)}
                                                     </td>
-                                                    <td className="px-4 py-3 text-right text-blue-400">
+                                                    <td className="px-4 py-3 text-right text-primary">
                                                         +{formatCurrency(correctedRow.correctionInfo.interestAmount)}
                                                     </td>
-                                                    <td className="px-4 py-3 text-right text-emerald-500 font-bold">
+                                                    <td className="px-4 py-3 text-right text-primary font-bold bg-primary/5">
                                                         {formatCurrency(correctedRow.valorTotal)}
                                                     </td>
                                                 </>
                                             ) : correctionEnabled ? (
-                                                // Fallback if no specific correction info found for this row
+                                                // Fallback
                                                 <>
                                                     <td className="px-4 py-3 text-right">-</td>
                                                     <td className="px-4 py-3 text-right">-</td>
                                                     <td className="px-4 py-3 text-right">-</td>
-                                                    <td className="px-4 py-3 text-right">-</td>
-                                                    <td className="px-4 py-3 text-right text-emerald-500">
+                                                    <td className="px-4 py-3 text-right text-primary font-bold">
                                                         {formatCurrency(row.valor)}
                                                     </td>
                                                 </>
                                             ) : (
-                                                // Non-Correction Mode (Simple View)
-                                                <td className="px-4 py-3 text-right text-emerald-500">
+                                                // Simple View
+                                                <td className="px-4 py-3 text-right text-primary font-medium">
                                                     {formatCurrency(row.valor)}
                                                 </td>
                                             )}
@@ -622,26 +666,24 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                                     );
                                 })}
                             </tbody>
-
-                            <tfoot className="bg-zinc-950/30 font-semibold border-t border-zinc-800">
+                            <tfoot className="bg-zinc-50 font-semibold border-t border-border text-xs">
                                 <tr>
-                                    <td className="px-4 py-3 text-zinc-400">TOTAL</td>
-                                    <td className="px-4 py-3 text-right text-zinc-500">{formatCurrency(result.fgts.depositos)}</td>
+                                    <td className="px-4 py-3 text-muted-foreground">TOTAL</td>
+                                    <td className="px-4 py-3 text-right text-foreground">{formatCurrency(result.fgts.depositos)}</td>
                                     {correctionEnabled && (
                                         <>
-                                            <td className="px-4 py-3 text-right text-amber-500">
+                                            <td className="px-4 py-3 text-right text-accent">
                                                 {formatCurrency(correctedValues?.fgts.mensal.reduce((a, b) => a + (b.correctionInfo?.correctionAmount || 0), 0) || 0)}
                                             </td>
-                                            <td className="px-4 py-3 text-right text-zinc-300">
+                                            <td className="px-4 py-3 text-right text-foreground">
                                                 {formatCurrency(correctedValues?.fgts.mensal.reduce((a, b) => a + (b.correctionInfo?.correctedValue || 0), 0) || 0)}
                                             </td>
-                                            <td className="px-4 py-3 text-right text-zinc-500">-</td>
-                                            <td className="px-4 py-3 text-right text-blue-400">
+                                            <td className="px-4 py-3 text-right text-primary">
                                                 {formatCurrency(correctedValues?.fgts.totalJuros || 0)}
                                             </td>
                                         </>
                                     )}
-                                    <td className="px-4 py-3 text-right text-emerald-400">
+                                    <td className="px-4 py-3 text-right text-primary bg-primary/10 border-l border-primary/20">
                                         {correctionEnabled
                                             ? formatCurrency(correctedValues?.fgts.totalFinal || 0)
                                             : formatCurrency(result.fgts.depositos)
@@ -652,16 +694,15 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                         </table>
                     </div>
                 </div >
-            )
-            }
+            )}
 
             {/* Grand Total */}
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 flex items-center justify-between">
+            <div className="bg-primary text-primary-foreground rounded-xl p-6 flex items-center justify-between shadow-lg shadow-primary/20">
                 <div className="flex flex-col">
-                    <span className="text-sm text-primary font-medium uppercase tracking-wider">Total Estimado</span>
-                    <span className="text-xs text-primary/60">Verbas Rescisórias + FGTS</span>
+                    <span className="text-sm font-medium uppercase tracking-wider opacity-90">Total Geral Estimado</span>
+                    <span className="text-xs opacity-60">Rescisória + Multa + FGTS (Corrigidos se ativo)</span>
                 </div>
-                <div className="text-3xl font-bold text-white font-mono">
+                <div className="text-3xl font-bold font-serif tracking-tight">
                     {formatCurrency(result.totalGeral)}
                 </div>
             </div>

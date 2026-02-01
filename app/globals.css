@@ -35,50 +35,50 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* Base Zinc (Slate-ish) Dark Theme */
+/* Brito & Santos Theme */
 :root {
-  --background: 240 10% 98%; /* Light mode fallback */
-  --foreground: 240 10% 3.9%;
+  --background: 40 5% 96%; /* Off-White E5E5E4-ish */
+  --foreground: 228 39% 15%; /* Dark Blue Text */
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 228 39% 15%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 262.1 83.3% 57.8%; /* Violet 600 */
-  --primary-foreground: 210 20% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  --popover-foreground: 228 39% 15%;
+  --primary: 228 39% 25%; /* #273159 Dark Blue */
+  --primary-foreground: 34 33% 85%; /* Light Gold text */
+  --secondary: 223 43% 36%; /* #344A82 Light Blue */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 228 20% 90%;
+  --muted-foreground: 228 10% 40%;
+  --accent: 34 33% 46%; /* #9A7A4F Gold */
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 262.1 83.3% 57.8%;
-  --radius: 0.75rem; /* Larger radius for modern look */
+  --border: 228 10% 85%;
+  --input: 228 10% 85%;
+  --ring: 228 39% 25%;
+  --radius: 0.5rem;
 }
 
 .dark {
-  --background: 240 10% 4%; /* Deep Zinc */
-  --foreground: 0 0% 98%;
-  --card: 240 10% 6%; /* Slightly lighter than bg */
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 6%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 263 70% 50%; /* Deep Violet */
-  --primary-foreground: 210 20% 98%;
-  --secondary: 240 3.7% 15.9%; /* Lighter grey for secondary */
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  --background: 228 25% 10%; /* Very Dark Blue-ish */
+  --foreground: 40 5% 90%;
+  --card: 228 25% 13%;
+  --card-foreground: 40 5% 90%;
+  --popover: 228 25% 13%;
+  --popover-foreground: 40 5% 90%;
+  --primary: 34 33% 46%; /* Gold as Primary in Dark Mode for contrast? Or keep Blue? Let's use Gold for pop */
+  --primary-foreground: 228 39% 15%;
+  --secondary: 228 39% 25%; /* Dark Blue as Secondary */
+  --secondary-foreground: 40 5% 90%;
+  --muted: 228 20% 20%;
+  --muted-foreground: 228 10% 60%;
+  --accent: 34 33% 46%; /* Gold */
+  --accent-foreground: 228 39% 15%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 85.7% 97.3%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 263 70% 50%;
+  --border: 228 20% 20%;
+  --input: 228 20% 20%;
+  --ring: 34 33% 46%;
 }
 
 @layer base {

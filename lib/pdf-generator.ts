@@ -56,14 +56,21 @@ const incrementMonth = (mesAno: string): string => {
     }
 };
 
+// Brand Colors
+const COLOR_PRIMARY = [39, 49, 89] as [number, number, number]; // Dark Blue
+const COLOR_SECONDARY = [52, 74, 130] as [number, number, number];
+const COLOR_ACCENT = [154, 122, 79] as [number, number, number]; // Gold
+const COLOR_LIGHT = [245, 245, 245] as [number, number, number];
+
 export const generateAuditReport = (
     data: ExtractedData[],
     correctionParams?: {
         enabled: boolean;
         index: string;
         interest: string;
-        data?: any[]; // Pre-calculated correction rows if needed
-    }
+        data?: any[];
+    },
+    logoBase64?: string
 ) => {
     // 0. PRE-CALCULATION (Must happen before PDF generation to have correct totals for the text)
     const tableHead = [
@@ -181,14 +188,26 @@ export const generateAuditReport = (
     let currentY = 20;
 
     // Header
+    if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20); // Logo Top Right
+    }
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.text("Relatório de Auditoria - Aulas Suplementares", pageWidth / 2, currentY, { align: "center" });
+    doc.setTextColor(COLOR_PRIMARY[0], COLOR_PRIMARY[1], COLOR_PRIMARY[2]);
+    doc.text("BRITO & SANTOS ADVOCACIA", margin, currentY);
+
+    currentY += 8;
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text("Relatório de Auditoria - Aulas Suplementares", margin, currentY);
 
     currentY += 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, currentY, { align: "center" });
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, margin, currentY);
+
+    doc.setTextColor(0); // Reset black
 
     currentY += 15;
 
@@ -259,13 +278,13 @@ export const generateAuditReport = (
             halign: 'center'
         },
         headStyles: {
-            fillColor: [22, 163, 74],
+            fillColor: COLOR_PRIMARY,
             textColor: [255, 255, 255],
             fontStyle: 'bold'
         },
         footStyles: {
-            fillColor: [240, 253, 244],
-            textColor: [0, 0, 0],
+            fillColor: COLOR_LIGHT, // Light Gray
+            textColor: COLOR_PRIMARY, // Dark Blue Text
             fontStyle: 'bold'
         },
         columnStyles: {
@@ -323,7 +342,8 @@ export const generateSeveranceReport = (
         total: number;
         indexName: string;
         interestName: string;
-    } | null
+    } | null,
+    logoBase64?: string
 ) => {
     const doc = new jsPDF(); // Portrait is fine for this
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -331,14 +351,25 @@ export const generateSeveranceReport = (
     let currentY = 20;
 
     // Header
+    if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20);
+    }
+
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Termo de Cálculo de Verbas Rescisórias", pageWidth / 2, currentY, { align: "center" });
+    doc.setFontSize(18);
+    doc.setTextColor(COLOR_PRIMARY[0], COLOR_PRIMARY[1], COLOR_PRIMARY[2]);
+    doc.text("BRITO & SANTOS ADVOCACIA", margin, currentY);
+
+    currentY += 8;
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text("Termo de Cálculo de Verbas Rescisórias", margin, currentY);
 
     currentY += 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, currentY, { align: "center" });
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, margin, currentY);
+    doc.setTextColor(0); // Reset
 
     currentY += 20;
 
@@ -424,8 +455,8 @@ export const generateSeveranceReport = (
         body: tableBody,
         foot: tableFoot,
         theme: 'grid',
-        headStyles: { fillColor: [22, 163, 74] },
-        footStyles: { fillColor: [240, 253, 244], textColor: [0, 0, 0], fontStyle: 'bold' },
+        headStyles: { fillColor: COLOR_PRIMARY },
+        footStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_PRIMARY, fontStyle: 'bold' },
         columnStyles: {
             0: { cellWidth: 'auto' },
             1: { cellWidth: 40, halign: 'center' },
@@ -451,7 +482,8 @@ export const generateFGTSReport = (
     admissao: string,
     demissao: string,
     correctionTotal?: number | null,
-    correctedItems?: any[] | null // Array of corrected row items
+    correctedItems?: any[] | null, // Array of corrected row items
+    logoBase64?: string
 ) => {
     const doc = new jsPDF({ orientation: "landscape" }); // Landscape for more columns
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -459,13 +491,24 @@ export const generateFGTSReport = (
     let currentY = 20;
 
     // Header
+    if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20);
+    }
+
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Memória de Cálculo - FGTS", pageWidth / 2, currentY, { align: "center" });
+    doc.setFontSize(18);
+    doc.setTextColor(COLOR_PRIMARY[0], COLOR_PRIMARY[1], COLOR_PRIMARY[2]);
+    doc.text("BRITO & SANTOS ADVOCACIA", margin, currentY);
+
+    currentY += 8;
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text("Memória de Cálculo - FGTS", margin, currentY);
 
     currentY += 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
 
     // Employee Info Header Block
     doc.setFont("helvetica", "bold");
@@ -485,12 +528,12 @@ export const generateFGTSReport = (
 
     // Summary Card
     doc.setDrawColor(200);
-    doc.setFillColor(240, 253, 244);
+    doc.setFillColor(COLOR_LIGHT[0], COLOR_LIGHT[1], COLOR_LIGHT[2]);
     doc.rect(margin, currentY, pageWidth - (margin * 2), 25, 'FD');
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.setTextColor(22, 163, 74);
+    doc.setTextColor(COLOR_PRIMARY[0], COLOR_PRIMARY[1], COLOR_PRIMARY[2]);
 
     // Check if we have correction
     const displayTotal = correctionTotal
@@ -567,8 +610,8 @@ export const generateFGTSReport = (
             body: tableBody,
             foot: tableFoot,
             theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] },
-            footStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+            headStyles: { fillColor: COLOR_PRIMARY },
+            footStyles: { fillColor: COLOR_PRIMARY, textColor: [255, 255, 255], fontStyle: 'bold' },
             columnStyles: {
                 1: { halign: 'right' },
                 2: { halign: 'right' },
@@ -607,8 +650,8 @@ export const generateFGTSReport = (
             body: tableBody,
             foot: tableFoot,
             theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] },
-            footStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+            headStyles: { fillColor: COLOR_PRIMARY },
+            footStyles: { fillColor: COLOR_PRIMARY, textColor: [255, 255, 255], fontStyle: 'bold' },
             columnStyles: {
                 1: { halign: 'right' },
                 2: { halign: 'center' },
