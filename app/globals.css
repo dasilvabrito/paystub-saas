@@ -37,42 +37,53 @@
 
 /* Brito & Santos Theme */
 :root {
-  --background: 40 5% 96%; /* Off-White E5E5E4-ish */
-  --foreground: 228 39% 15%; /* Dark Blue Text */
+  --background: 220 30% 98%;
+  /* Very light cool gray/blue tint */
+  --foreground: 220 60% 10%;
+  /* Very dark navy text */
   --card: 0 0% 100%;
-  --card-foreground: 228 39% 15%;
+  --card-foreground: 220 60% 10%;
   --popover: 0 0% 100%;
-  --popover-foreground: 228 39% 15%;
-  --primary: 228 39% 25%; /* #273159 Dark Blue */
-  --primary-foreground: 34 33% 85%; /* Light Gold text */
-  --secondary: 223 43% 36%; /* #344A82 Light Blue */
+  --popover-foreground: 220 60% 10%;
+  --primary: 220 60% 15%;
+  /* #0F1C3F Deep Navy Blue */
+  --primary-foreground: 46 65% 52%;
+  /* #D4AF37 Metallic Gold Text */
+  --secondary: 220 45% 25%;
+  /* #233154 Lighter Navy */
   --secondary-foreground: 0 0% 100%;
-  --muted: 228 20% 90%;
-  --muted-foreground: 228 10% 40%;
-  --accent: 34 33% 46%; /* #9A7A4F Gold */
-  --accent-foreground: 0 0% 100%;
+  --muted: 220 20% 94%;
+  --muted-foreground: 220 10% 40%;
+  --accent: 46 65% 52%;
+  /* #D4AF37 Metallic Gold */
+  --accent-foreground: 220 60% 15%;
+  /* Navy text on Gold */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 228 10% 85%;
-  --input: 228 10% 85%;
-  --ring: 228 39% 25%;
+  --border: 220 15% 85%;
+  --input: 220 15% 85%;
+  --ring: 220 60% 15%;
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: 228 25% 10%; /* Very Dark Blue-ish */
+  --background: 228 25% 10%;
+  /* Very Dark Blue-ish */
   --foreground: 40 5% 90%;
   --card: 228 25% 13%;
   --card-foreground: 40 5% 90%;
   --popover: 228 25% 13%;
   --popover-foreground: 40 5% 90%;
-  --primary: 34 33% 46%; /* Gold as Primary in Dark Mode for contrast? Or keep Blue? Let's use Gold for pop */
+  --primary: 34 33% 46%;
+  /* Gold as Primary in Dark Mode for contrast? Or keep Blue? Let's use Gold for pop */
   --primary-foreground: 228 39% 15%;
-  --secondary: 228 39% 25%; /* Dark Blue as Secondary */
+  --secondary: 228 39% 25%;
+  /* Dark Blue as Secondary */
   --secondary-foreground: 40 5% 90%;
   --muted: 228 20% 20%;
   --muted-foreground: 228 10% 60%;
-  --accent: 34 33% 46%; /* Gold */
+  --accent: 34 33% 46%;
+  /* Gold */
   --accent-foreground: 228 39% 15%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 85.7% 97.3%;
@@ -82,6 +93,7 @@
 }
 
 @layer base {
+
   *,
   ::after,
   ::before,
@@ -95,6 +107,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

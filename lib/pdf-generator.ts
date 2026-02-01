@@ -70,11 +70,11 @@ const incrementMonth = (mesAno: string): string => {
     }
 };
 
-// Brand Colors
-const COLOR_PRIMARY = [39, 49, 89] as [number, number, number]; // Dark Blue
-const COLOR_SECONDARY = [52, 74, 130] as [number, number, number];
-const COLOR_ACCENT = [154, 122, 79] as [number, number, number]; // Gold
-const COLOR_LIGHT = [245, 245, 245] as [number, number, number];
+// Brand Colors (Updated: Deep Navy & Metallic Gold)
+const COLOR_PRIMARY = [15, 28, 63] as [number, number, number]; // #0F1C3F Deep Navy
+const COLOR_SECONDARY = [35, 49, 84] as [number, number, number]; // #233154 Lighter Navy
+const COLOR_ACCENT = [212, 175, 55] as [number, number, number]; // #D4AF37 Metallic Gold
+const COLOR_LIGHT = [248, 249, 250] as [number, number, number];
 
 export const generateAuditReport = (
     data: ExtractedData[],
