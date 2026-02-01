@@ -568,7 +568,6 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                                         <>
                                             <th className="px-4 py-3 text-right text-amber-500">Correção ($)</th>
                                             <th className="px-4 py-3 text-right text-zinc-300">Valor Atualizado</th>
-                                            <th className="px-4 py-3 text-right text-blue-400">Juros (Desc)</th>
                                             <th className="px-4 py-3 text-right text-blue-400">Juros ($)</th>
                                         </>
                                     )}
@@ -592,12 +591,6 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                                                     </td>
                                                     <td className="px-4 py-3 text-right text-zinc-300">
                                                         {formatCurrency(correctedRow.correctionInfo.correctedValue)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right text-blue-400/80 text-[10px]">
-                                                        {correctedRow.correctionInfo.interestFactor.toFixed(2)}%
-                                                        <span className="block text-zinc-600">
-                                                            ({correctedRow.correctionInfo.details.daysElapsed} dias)
-                                                        </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-right text-blue-400">
                                                         +{formatCurrency(correctedRow.correctionInfo.interestAmount)}
