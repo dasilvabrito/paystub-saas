@@ -107,7 +107,7 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
         let totalFgtsJuros = 0;
 
         const fgtsMensalCorrigido = result.fgts.mensal.map(item => {
-            if (!item.competencia) return { ...item, valorCorrigido: item.valor, valorTotal: item.valor };
+            if (!item.competencia) return { ...item, valorCorrigido: item.valor, valorTotal: item.valor, correctionInfo: null };
 
             const [mStr, yStr] = item.competencia.split('/');
             let month = parseInt(mStr);
@@ -562,38 +562,103 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                         <table className="w-full text-sm text-left text-zinc-300">
                             <thead className="bg-zinc-950/30 text-xs uppercase text-zinc-500 font-semibold sticky top-0 backdrop-blur-sm">
                                 <tr>
-                                    <th className="px-6 py-3">Referência</th>
-                                    <th className="px-6 py-3 text-right">Base de Cálculo</th>
-                                    <th className="px-6 py-3 text-right">FGTS (8%)</th>
-                                    <th className="px-6 py-3 text-right">Status</th>
+                                    <th className="px-4 py-3">Ref</th>
+                                    <th className="px-4 py-3 text-right">FGTS Original</th>
+                                    {correctionEnabled && (
+                                        <>
+                                            <th className="px-4 py-3 text-right text-amber-500">Correção ($)</th>
+                                            <th className="px-4 py-3 text-right text-zinc-300">Valor Atualizado</th>
+                                            <th className="px-4 py-3 text-right text-blue-400">Juros (Desc)</th>
+                                            <th className="px-4 py-3 text-right text-blue-400">Juros ($)</th>
+                                        </>
+                                    )}
+                                    <th className="px-4 py-3 text-right">Total</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800/50 font-mono text-xs">
-                                {result.fgts.mensal.map((row, idx) => (
-                                    <tr key={idx} className="hover:bg-zinc-800/20">
-                                        <td className="px-6 py-3 text-zinc-400">{row.competencia}</td>
-                                        <td className="px-6 py-3 text-right">{formatCurrency(row.base)}</td>
-                                        <td className="px-6 py-3 text-right text-emerald-500">{formatCurrency(row.valor)}</td>
-                                        <td className="px-6 py-3 text-right">
-                                            <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">
-                                                {row.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {result.fgts.mensal.map((row, idx) => {
+                                    // Access corresponding corrected row
+                                    const correctedRow = correctionEnabled ? correctedValues?.fgts.mensal[idx] : null;
+
+                                    return (
+                                        <tr key={idx} className="hover:bg-zinc-800/20">
+                                            <td className="px-4 py-3 text-zinc-400">{row.competencia}</td>
+                                            <td className="px-4 py-3 text-right">{formatCurrency(row.valor)}</td>
+
+                                            {correctionEnabled && correctedRow?.correctionInfo ? (
+                                                <>
+                                                    <td className="px-4 py-3 text-right text-amber-500/80">
+                                                        +{formatCurrency(correctedRow.correctionInfo.correctionAmount)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-zinc-300">
+                                                        {formatCurrency(correctedRow.correctionInfo.correctedValue)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-blue-400/80 text-[10px]">
+                                                        {correctedRow.correctionInfo.interestFactor.toFixed(2)}%
+                                                        <span className="block text-zinc-600">
+                                                            ({correctedRow.correctionInfo.details.daysElapsed} dias)
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-blue-400">
+                                                        +{formatCurrency(correctedRow.correctionInfo.interestAmount)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-emerald-500 font-bold">
+                                                        {formatCurrency(correctedRow.valorTotal)}
+                                                    </td>
+                                                </>
+                                            ) : correctionEnabled ? (
+                                                // Fallback if no specific correction info found for this row
+                                                <>
+                                                    <td className="px-4 py-3 text-right">-</td>
+                                                    <td className="px-4 py-3 text-right">-</td>
+                                                    <td className="px-4 py-3 text-right">-</td>
+                                                    <td className="px-4 py-3 text-right">-</td>
+                                                    <td className="px-4 py-3 text-right text-emerald-500">
+                                                        {formatCurrency(row.valor)}
+                                                    </td>
+                                                </>
+                                            ) : (
+                                                // Non-Correction Mode (Simple View)
+                                                <td className="px-4 py-3 text-right text-emerald-500">
+                                                    {formatCurrency(row.valor)}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
+
                             <tfoot className="bg-zinc-950/30 font-semibold border-t border-zinc-800">
                                 <tr>
-                                    <td className="px-6 py-3 text-zinc-400">TOTAL</td>
-                                    <td className="px-6 py-3 text-right text-zinc-500">-</td>
-                                    <td className="px-6 py-3 text-right text-emerald-400">{formatCurrency(result.fgts.depositos)}</td>
-                                    <td className="px-6 py-3"></td>
+                                    <td className="px-4 py-3 text-zinc-400">TOTAL</td>
+                                    <td className="px-4 py-3 text-right text-zinc-500">{formatCurrency(result.fgts.depositos)}</td>
+                                    {correctionEnabled && (
+                                        <>
+                                            <td className="px-4 py-3 text-right text-amber-500">
+                                                {formatCurrency(correctedValues?.fgts.mensal.reduce((a, b) => a + (b.correctionInfo?.correctionAmount || 0), 0) || 0)}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-zinc-300">
+                                                {formatCurrency(correctedValues?.fgts.mensal.reduce((a, b) => a + (b.correctionInfo?.correctedValue || 0), 0) || 0)}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-zinc-500">-</td>
+                                            <td className="px-4 py-3 text-right text-blue-400">
+                                                {formatCurrency(correctedValues?.fgts.totalJuros || 0)}
+                                            </td>
+                                        </>
+                                    )}
+                                    <td className="px-4 py-3 text-right text-emerald-400">
+                                        {correctionEnabled
+                                            ? formatCurrency(correctedValues?.fgts.totalFinal || 0)
+                                            : formatCurrency(result.fgts.depositos)
+                                        }
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
 
             {/* Grand Total */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 flex items-center justify-between">
@@ -606,6 +671,6 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                 </div>
             </div>
 
-        </div>
+        </div >
     );
 }
