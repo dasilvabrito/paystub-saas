@@ -109,12 +109,11 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
         const fgtsMensalCorrigido = result.fgts.mensal.map(item => {
             if (!item.competencia) return { ...item, valorCorrigido: item.valor, valorTotal: item.valor, correctionInfo: null };
 
-            const [mStr, yStr] = item.competencia.split('/');
-            let month = parseInt(mStr);
-            const year = parseInt(yStr);
-            if (month > 12) month = 12;
+            // Robust parsing using shared utility (handles "Mar/2021" and "03/2021")
+            const parsedDate = parseMesAno(item.competencia);
+            if (!parsedDate) return { ...item, valorCorrigido: item.valor, valorTotal: item.valor, correctionInfo: null };
 
-            const refDate = new Date(year, month - 1, 1);
+            const refDate = parsedDate; // This is the 1st of the month (e.g. 01/03/2021)
             // RULE: Vencimento dia 10 do mês seguinte
             // (10th of MM+1)
             const nextMonth = new Date(refDate);
