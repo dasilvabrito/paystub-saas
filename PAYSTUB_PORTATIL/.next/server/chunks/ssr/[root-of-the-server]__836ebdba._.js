@@ -1,0 +1,3 @@
+module.exports=[18622,(a,b,c)=>{b.exports=a.x("next/dist/compiled/next-server/app-page-turbo.runtime.prod.js",()=>require("next/dist/compiled/next-server/app-page-turbo.runtime.prod.js"))},14747,(a,b,c)=>{b.exports=a.x("path",()=>require("path"))},42602,(a,b,c)=>{"use strict";b.exports=a.r(18622)},87924,(a,b,c)=>{"use strict";b.exports=a.r(42602).vendored["react-ssr"].ReactJsxRuntime},72131,(a,b,c)=>{"use strict";b.exports=a.r(42602).vendored["react-ssr"].React},22734,(a,b,c)=>{b.exports=a.x("fs",()=>require("fs"))}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__836ebdba._.js.map
