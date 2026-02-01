@@ -41,12 +41,10 @@ export default function LoginPage() {
             <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-xl border border-accent/20 shadow-2xl shadow-primary/5">
                 <div className="flex flex-col items-center text-center">
                     <div className="relative w-48 h-32 mb-4">
-                        <Image
+                        <img
                             src="/logo.png"
                             alt="Brito & Santos Advocacia"
-                            fill
-                            className="object-contain" // Contain to ensure logo fits well
-                            priority
+                            className="w-full h-full object-contain"
                         />
                     </div>
                     {/* <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">BRITO & SANTOS</h2>
