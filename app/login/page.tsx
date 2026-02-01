@@ -41,8 +41,8 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen flex items-center justify-center p-4 bg-background">
-            <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-xl border border-accent/20 shadow-2xl shadow-primary/5">
+        <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#0F1C3F] via-[#233154] to-[#0F1C3F]">
+            <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-xl border-t-4 border-t-[#D4AF37] shadow-2xl shadow-black/20">
                 <div className="flex flex-col items-center text-center">
                     <div className="relative w-48 h-32 mb-4">
                         <img
@@ -51,19 +51,17 @@ export default function LoginPage() {
                             className="w-full h-full object-contain"
                         />
                     </div>
-                    {/* <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">BRITO & SANTOS</h2>
-                    <span className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mt-1">Advocacia</span> */}
-                    {/* Using Image text mostly, but adding a safe title if needed or just welcome message */}
+
                     <div className="mt-4">
-                        <h3 className="text-lg font-medium text-primary/80">Área Restrita</h3>
-                        <p className="text-xs text-muted-foreground mt-1">Acesso exclusivo para colaboradores</p>
+                        <h3 className="text-xl font-semibold text-[#0F1C3F]">Área Restrita</h3>
+                        <p className="text-xs text-slate-500 mt-1 uppercase tracking-wide">Acesso exclusivo para colaboradores</p>
                     </div>
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-primary/70 mb-1.5 ml-1">
+                            <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-[#0F1C3F]/80 mb-1.5 ml-1">
                                 Email Corporativo
                             </label>
                             <input
@@ -74,13 +72,13 @@ export default function LoginPage() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="block w-full rounded-lg border border-input bg-zinc-50 px-3 py-2.5 text-foreground placeholder-muted-foreground shadow-sm focus:border-accent focus:bg-white focus:outline-none focus:ring-1 focus:ring-accent transition-all sm:text-sm"
+                                className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#0F1C3F] placeholder-slate-400 shadow-sm focus:border-[#D4AF37] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37] transition-all sm:text-sm"
                                 placeholder="nome@britoesantos.adv.br"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-primary/70 mb-1.5 ml-1">
+                            <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-[#0F1C3F]/80 mb-1.5 ml-1">
                                 Senha
                             </label>
                             <input
@@ -91,7 +89,7 @@ export default function LoginPage() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="block w-full rounded-lg border border-input bg-zinc-50 px-3 py-2.5 text-foreground placeholder-muted-foreground shadow-sm focus:border-accent focus:bg-white focus:outline-none focus:ring-1 focus:ring-accent transition-all sm:text-sm"
+                                className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#0F1C3F] placeholder-slate-400 shadow-sm focus:border-[#D4AF37] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37] transition-all sm:text-sm"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -107,17 +105,17 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="group relative flex w-full justify-center rounded-lg bg-primary px-3 py-3 text-sm font-semibold text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20"
+                        className="group relative flex w-full justify-center rounded-lg bg-[#0F1C3F] px-3 py-3 text-sm font-semibold text-white hover:bg-[#233154] hover:shadow-lg hover:shadow-[#0F1C3F]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                         {loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin text-accent" />
+                            <Loader2 className="w-5 h-5 animate-spin text-[#D4AF37]" />
                         ) : (
                             "ACESSAR SISTEMA"
                         )}
                     </button>
 
                     <div className="text-center pt-4">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">
                             &copy; {new Date().getFullYear()} Brito & Santos Advocacia
                         </p>
                     </div>
