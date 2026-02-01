@@ -166,7 +166,9 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
         const totalRescisaoOriginal = avisoVal + feriasVal + reflexoVal;
 
         const demissionDateObj = demissao ? new Date(demissao + "T00:00:00") : new Date();
-        const rescisaoDueDate = getTenthBusinessDayNextMonth(demissionDateObj);
+        // RULE: Severance due 10 days after termination
+        const rescisaoDueDate = new Date(demissionDateObj);
+        rescisaoDueDate.setDate(rescisaoDueDate.getDate() + 10);
 
         const correctionRescisao = CorrectionService.calculate(
             totalRescisaoOriginal,
