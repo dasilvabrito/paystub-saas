@@ -450,9 +450,10 @@ export const generateFGTSReport = (
     vinculo: string,
     admissao: string,
     demissao: string,
-    correctionTotal?: number | null // Total corrected value passing
+    correctionTotal?: number | null,
+    correctedItems?: any[] | null // Array of corrected row items
 ) => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: "landscape" }); // Landscape for more columns
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 14;
     let currentY = 20;
@@ -490,53 +491,132 @@ export const generateFGTSReport = (
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.setTextColor(22, 163, 74);
-    doc.text(`Total FGTS Apurado: ${formatCurrency(result.fgts.total)}`, pageWidth / 2, currentY + 16, { align: "center" });
+
+    // Check if we have correction
+    const displayTotal = correctionTotal
+        ? (correctionTotal + (result.fgts.saldoParaFinsRescisorios * 0.4)) // Use original basis for fine
+        : (result.fgts.total + result.fgts.multa40);
+
+    doc.text(`Total FGTS Apurado: ${formatCurrency(displayTotal)}`, pageWidth / 2, currentY + 16, { align: "center" });
     doc.setTextColor(0, 0, 0);
 
     currentY += 35;
 
-    // Table
-    const tableHead = [["Competência", "Base de Cálculo", "Alíquota", "Valor Devido", "Status"]];
-    const tableBody = result.fgts.mensal.map(r => [
-        r.competencia,
-        formatCurrency(r.base),
-        "8.00%",
-        formatCurrency(r.valor),
-        r.status
-    ]);
+    // Table Columns Definition
+    let tableHead: string[][] = [];
+    let tableBody: any[][] = [];
 
-    // Add Multa Row (as a summary line or part of table?)
-    // User wants "Multa 40%" explicitly.
-    // Let's create a separation row.
-    tableBody.push([
-        "Multa Rescisória (40%)",
-        formatCurrency(result.fgts.saldoParaFinsRescisorios), // Basis for Fine
-        "40.00%",
-        formatCurrency(result.fgts.multa40),
-        "Multa"
-    ]);
+    if (correctedItems && correctedItems.length > 0) {
+        // Detailed Correction Columns
+        tableHead = [["Ref.", "FGTS Original", "Correção ($)", "Valor Atualizado", "Juros ($)", "Total"]];
 
-    const finalTotal = correctionTotal ? (correctionTotal + (correctionTotal * 0.4)) : (result.fgts.total + result.fgts.multa40);
+        tableBody = result.fgts.mensal.map((r, i) => {
+            const corr = correctedItems[i];
+            const hasCorr = corr && corr.correctionInfo;
 
-    const tableFoot = [
-        ["TOTAL A RECEBER", "-", "-", formatCurrency(finalTotal), correctionTotal ? "(Corrigido)" : "-"]
-    ];
+            return [
+                r.competencia,
+                formatCurrency(r.valor),
+                hasCorr ? formatCurrency(corr.correctionInfo.correctionAmount) : "-",
+                hasCorr ? formatCurrency(corr.correctionInfo.correctedValue) : "-",
+                hasCorr ? formatCurrency(corr.correctionInfo.interestAmount) : "-",
+                hasCorr ? formatCurrency(corr.valorTotal) : formatCurrency(r.valor)
+            ];
+        });
 
-    autoTable(doc, {
-        startY: currentY,
-        head: tableHead,
-        body: tableBody,
-        foot: tableFoot,
-        theme: 'striped',
-        headStyles: { fillColor: [22, 163, 74] },
-        footStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: {
-            1: { halign: 'right' },
-            2: { halign: 'center' },
-            3: { halign: 'right', fontStyle: 'bold' },
-            4: { halign: 'center' }
-        }
-    });
+        // Add Multa Row
+        // For strictness: Fine is calculated on sum of ORIGINAL deposits
+        const baseFine = result.fgts.saldoParaFinsRescisorios;
+        const fineValue = baseFine * 0.4; // 40% on Original
+
+        tableBody.push([
+            "Multa 40% (s/ Original)",
+            formatCurrency(baseFine), // "Base" effectively
+            "-",
+            "-",
+            "-",
+            formatCurrency(fineValue)
+        ]);
+
+        // Total Foot
+        // Sum of cols
+        const sumOriginal = tableBody.reduce((a, b) => {
+            const val = typeof b[1] === 'string' ? parseCurrency(b[1]) : 0;
+            return b[0].includes("Multa") ? a : a + val;
+        }, 0);
+
+        const sumCorrection = correctedItems.reduce((a: number, b: any) => a + (b.correctionInfo?.correctionAmount || 0), 0);
+        const sumCorrected = correctedItems.reduce((a: number, b: any) => a + (b.correctionInfo?.correctedValue || 0), 0);
+        const sumInterest = correctedItems.reduce((a: number, b: any) => a + (b.correctionInfo?.interestAmount || 0), 0);
+        const sumFinal = correctedItems.reduce((a: number, b: any) => a + (b.valorTotal || 0), 0);
+
+        const tableFoot = [
+            [
+                "TOTAL GERAL",
+                formatCurrency(sumOriginal),
+                formatCurrency(sumCorrection),
+                formatCurrency(sumCorrected),
+                formatCurrency(sumInterest),
+                formatCurrency(sumFinal + fineValue)
+            ]
+        ];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: tableHead,
+            body: tableBody,
+            foot: tableFoot,
+            theme: 'striped',
+            headStyles: { fillColor: [22, 163, 74] },
+            footStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+            columnStyles: {
+                1: { halign: 'right' },
+                2: { halign: 'right' },
+                3: { halign: 'right' },
+                4: { halign: 'right' },
+                5: { halign: 'right', fontStyle: 'bold' }
+            }
+        });
+
+    } else {
+        // Original Simple Table
+        tableHead = [["Competência", "Base de Cálculo", "Alíquota", "Valor Devido", "Status"]];
+        tableBody = result.fgts.mensal.map(r => [
+            r.competencia,
+            formatCurrency(r.base),
+            "8.00%",
+            formatCurrency(r.valor),
+            r.status
+        ]);
+
+        tableBody.push([
+            "Multa Rescisória (40%)",
+            formatCurrency(result.fgts.saldoParaFinsRescisorios),
+            "40.00%",
+            formatCurrency(result.fgts.multa40),
+            "Multa"
+        ]);
+
+        const tableFoot = [
+            ["TOTAL A RECEBER", "-", "-", formatCurrency(result.fgts.total + result.fgts.multa40), "-"]
+        ];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: tableHead,
+            body: tableBody,
+            foot: tableFoot,
+            theme: 'striped',
+            headStyles: { fillColor: [22, 163, 74] },
+            footStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+            columnStyles: {
+                1: { halign: 'right' },
+                2: { halign: 'center' },
+                3: { halign: 'right', fontStyle: 'bold' },
+                4: { halign: 'center' }
+            }
+        });
+    }
 
     // Legal Disclaimer
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -327,8 +327,9 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                         const vinculo = vinculoInfo.type || "N/D";
                         // Pass total Final (Principal + Corr + Interest)
                         const totalCorrigido = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.totalFinal : null;
+                        const correctedItems = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.mensal : null;
 
-                        generateFGTSReport(result, name, idFuncional, vinculo, admissao, demissao, totalCorrigido);
+                        generateFGTSReport(result, name, idFuncional, vinculo, admissao, demissao, totalCorrigido, correctedItems);
                     }}
                     className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
                 >
