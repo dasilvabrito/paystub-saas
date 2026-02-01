@@ -1,7 +1,12 @@
 
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import "jspdf-autotable";
 import { ExtractedData } from "./extractors";
+
+// Explicitly declare the autoTable function on jsPDF instance if needed, 
+// but usually simply importing "jspdf-autotable" extends the prototype.
+// However, to be safe with types and execution:
+const autoTable = require("jspdf-autotable").default || require("jspdf-autotable");
 import { formatCurrency, parseCurrency, parseInfo, detectMissingCompetencies } from "./math-utils";
 import { LaborCalculationResult } from "./labor-calculations";
 

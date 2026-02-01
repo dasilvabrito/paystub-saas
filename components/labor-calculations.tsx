@@ -270,17 +270,20 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                 <div className="flex justify-end mb-2">
                     <button
                         onClick={() => {
-                            if (correctionEnabled && correctedValues?.audit) {
-                                // Pass corrected data
-                                // @ts-ignore
-                                generateAuditReport(data, {
-                                    enabled: true,
-                                    index: correctionIndex,
-                                    interest: interestRate,
-                                    data: correctedValues.audit
-                                });
-                            } else {
-                                generateAuditReport(data);
+                            try {
+                                if (correctionEnabled && correctedValues?.audit) {
+                                    generateAuditReport(data, {
+                                        enabled: true,
+                                        index: correctionIndex,
+                                        interest: interestRate,
+                                        data: correctedValues.audit
+                                    }, logoBase64);
+                                } else {
+                                    generateAuditReport(data, undefined, logoBase64);
+                                }
+                            } catch (error) {
+                                console.error("Erro ao gerar PDF Auditoria:", error);
+                                alert("Erro ao gerar PDF de Auditoria.");
                             }
                         }}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
@@ -315,22 +318,22 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
             <div className="flex gap-2">
                 <button
                     onClick={() => {
-                        const name = data[0]?.nome || "Servidor";
-                        const correctionData = (correctionEnabled && correctedValues?.rescisao.info) ? {
-                            original: correctedValues.rescisao.info.originalValue,
-                            corrected: correctedValues.rescisao.info.correctedValue,
-                            // pass total including interest where PDF expects "Corrected" usually? 
-                            // Or we need to update PDF to handle Interest Separately.
-                            // For now, let's pass the full breakdown if we update PDF generator.
-                            // I will update PDF generator next step.
-                            interest: correctedValues.rescisao.info.interestAmount,
-                            total: correctedValues.rescisao.info.totalValue,
-                            indexName: correctedValues.rescisao.info.details.correctionIndex,
-                            interestName: correctedValues.rescisao.info.details.interestType
-                        } : null;
+                        try {
+                            const name = data[0]?.nome || "Servidor";
+                            const correctionData = (correctionEnabled && correctedValues?.rescisao.info) ? {
+                                original: correctedValues.rescisao.info.originalValue,
+                                corrected: correctedValues.rescisao.info.correctedValue,
+                                interest: correctedValues.rescisao.info.interestAmount,
+                                total: correctedValues.rescisao.info.totalValue,
+                                indexName: correctedValues.rescisao.info.details.correctionIndex,
+                                interestName: correctedValues.rescisao.info.details.interestType
+                            } : null;
 
-                        // @ts-ignore - will fix signature 
-                        generateSeveranceReport(result, name, admissao, demissao, displaySalary, correctionData);
+                            generateSeveranceReport(result, name, admissao, demissao, displaySalary, correctionData, logoBase64);
+                        } catch (error) {
+                            console.error("Erro ao gerar PDF:", error);
+                            alert("Erro ao gerar PDF de Rescisão. Verifique o console.");
+                        }
                     }}
                     className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
                 >
@@ -500,18 +503,22 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                     )}
                     <button
                         onClick={() => {
-                            // Pass correction data if enabled
-                            const corrData = (correctionEnabled && correctedValues?.rescisao) ? {
-                                original: result.avisoPrevio.valor + result.ferias.valor + result.avisoPrevio.reflexoFgts,
-                                corrected: correctedValues.rescisao.info.correctedValue,
-                                interest: correctedValues.rescisao.info.interestAmount,
-                                total: correctedValues.rescisao.totalFinal,
-                                indexName: correctionIndex,
-                                interestName: interestRate === '1%_SIMPLE' ? '1% a.m.' : 'Sem Juros'
-                            } : null;
+                            try {
+                                const corrData = (correctionEnabled && correctedValues?.rescisao) ? {
+                                    original: result.avisoPrevio.valor + result.ferias.valor + result.avisoPrevio.reflexoFgts,
+                                    corrected: correctedValues.rescisao.info.correctedValue,
+                                    interest: correctedValues.rescisao.info.interestAmount,
+                                    total: correctedValues.rescisao.totalFinal,
+                                    indexName: correctionIndex,
+                                    interestName: interestRate === '1%_SIMPLE' ? '1% a.m.' : 'Sem Juros'
+                                } : null;
 
-                            const name = data[0]?.nome || "Colaborador";
-                            generateSeveranceReport(result, name, admissao, demissao, displaySalary, corrData, logoBase64);
+                                const name = data[0]?.nome || "Colaborador";
+                                generateSeveranceReport(result, name, admissao, demissao, displaySalary, corrData, logoBase64);
+                            } catch (error) {
+                                console.error("Erro ao gerar PDF:", error);
+                                alert("Erro ao gerar PDF de Termo Rescisão. Verifique o console.");
+                            }
                         }}
                         className="mt-6 w-full py-2 bg-secondary text-white rounded-lg text-xs font-medium hover:bg-secondary/90 transition-colors"
                     >
@@ -545,15 +552,20 @@ export function LaborCalculations({ data }: LaborCalculationsProps) {
                     )}
                     <button
                         onClick={() => {
-                            const name = data[0]?.nome || "Colaborador";
-                            const idFuncional = data[0]?.idFuncional || "";
-                            const vinculoInfo = data.find(d => d.vinculo)?.vinculo || "";
-                            const vinculo = typeof vinculoInfo === 'string' ? vinculoInfo : "N/D";
-                            // Pass total Final (Principal + Corr + Interest)
-                            const totalCorrigido = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.totalFinal : null;
-                            const correctedItems = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.mensal : null;
+                            try {
+                                const name = data[0]?.nome || "Colaborador";
+                                const idFuncional = data[0]?.idFuncional || "";
+                                const vinculoInfo = data.find(d => d.vinculo)?.vinculo || "";
+                                const vinculo = typeof vinculoInfo === 'string' ? vinculoInfo : "N/D";
 
-                            generateFGTSReport(result, name, idFuncional, vinculo, admissao, demissao, totalCorrigido, correctedItems, logoBase64);
+                                const totalCorrigido = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.totalFinal : null;
+                                const correctedItems = (correctionEnabled && correctedValues?.fgts) ? correctedValues.fgts.mensal : null;
+
+                                generateFGTSReport(result, name, idFuncional, vinculo, admissao, demissao, totalCorrigido, correctedItems, logoBase64);
+                            } catch (error) {
+                                console.error("Erro ao gerar PDF FGTS:", error);
+                                alert("Erro ao gerar PDF FGTS. Verifique o console.");
+                            }
                         }}
                         className="mt-6 w-full py-2 bg-secondary text-white rounded-lg text-xs font-medium hover:bg-secondary/90 transition-colors"
                     >
