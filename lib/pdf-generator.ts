@@ -1,14 +1,23 @@
 
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import "jspdf-autotable"; // Side effect import to attach to jsPDF prototype
 import { ExtractedData } from "./extractors";
-
-// Explicitly declare the autoTable function on jsPDF instance if needed, 
-// but usually simply importing "jspdf-autotable" extends the prototype.
-// However, to be safe with types and execution:
-const autoTable = require("jspdf-autotable").default || require("jspdf-autotable");
-import { formatCurrency, parseCurrency, parseInfo, detectMissingCompetencies } from "./math-utils";
+import { formatCurrency, parseCurrency, parseInfo } from "./math-utils";
 import { LaborCalculationResult } from "./labor-calculations";
+
+// Helper to safely call autoTable
+const safeAutoTable = (doc: jsPDF, options: any) => {
+    try {
+        if ((doc as any).autoTable) {
+            (doc as any).autoTable(options);
+        } else {
+            console.warn("AutoTable plugin not found on jsPDF instance");
+        }
+    } catch (e) {
+        console.error("AutoTable generation failed:", e);
+        throw e; // Re-throw to alert user
+    }
+};
 
 interface ReportTotals {
     totalDevidas: number;
@@ -194,7 +203,11 @@ export const generateAuditReport = (
 
     // Header
     if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20); // Logo Top Right
+        try {
+            doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20); // Logo Top Right
+        } catch (e) {
+            console.warn("Failed to add logo:", e);
+        }
     }
 
     doc.setFont("helvetica", "bold");
@@ -270,7 +283,7 @@ export const generateAuditReport = (
         ]
     ];
 
-    autoTable(doc, {
+    safeAutoTable(doc, {
         startY: currentY,
         head: tableHead,
         body: finalRows,
@@ -332,8 +345,6 @@ const formatDatePTBR = (dateStr: string): string => {
     return dateStr;
 };
 
-// ... existing code ...
-
 export const generateSeveranceReport = (
     result: LaborCalculationResult,
     employeeName: string,
@@ -357,7 +368,11 @@ export const generateSeveranceReport = (
 
     // Header
     if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20);
+        try {
+            doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20);
+        } catch (e) {
+            console.warn("Failed to add logo:", e);
+        }
     }
 
     doc.setFont("helvetica", "bold");
@@ -454,7 +469,7 @@ export const generateSeveranceReport = (
         );
     }
 
-    autoTable(doc, {
+    safeAutoTable(doc, {
         startY: currentY,
         head: tableHead,
         body: tableBody,
@@ -471,7 +486,7 @@ export const generateSeveranceReport = (
 
     // Disclaimer
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    currentY = (doc as any).lastAutoTable.finalY + 15;
+    currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 15;
     doc.setFontSize(8);
     doc.setTextColor(100);
     doc.text("Este documento é um demonstrativo de cálculo estimado e não possui valor legal de homologação oficial.", margin, currentY);
@@ -497,7 +512,11 @@ export const generateFGTSReport = (
 
     // Header
     if (logoBase64) {
-        doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20);
+        try {
+            doc.addImage(logoBase64, 'PNG', pageWidth - 50, 10, 35, 20);
+        } catch (e) {
+            console.warn("Failed to add logo:", e);
+        }
     }
 
     doc.setFont("helvetica", "bold");
@@ -609,7 +628,7 @@ export const generateFGTSReport = (
             ]
         ];
 
-        autoTable(doc, {
+        safeAutoTable(doc, {
             startY: currentY,
             head: tableHead,
             body: tableBody,
@@ -649,7 +668,7 @@ export const generateFGTSReport = (
             ["TOTAL A RECEBER", "-", "-", formatCurrency(result.fgts.total + result.fgts.multa40), "-"]
         ];
 
-        autoTable(doc, {
+        safeAutoTable(doc, {
             startY: currentY,
             head: tableHead,
             body: tableBody,
@@ -666,9 +685,9 @@ export const generateFGTSReport = (
         });
     }
 
-    // Legal Disclaimer
+    // Disclaimer
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    currentY = (doc as any).lastAutoTable.finalY + 15;
+    currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 15;
 
     const disclaimer = "Este é apenas um demonstrativo simples. Na fase de liquidação de sentença ou acordo, após indicação do juízo dos índices oficiais de correção monetária e juros, os mesmos serão atualizados.";
 
