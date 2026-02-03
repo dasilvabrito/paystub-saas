@@ -12,6 +12,7 @@ export interface ExtractedData {
     gratMagisterio?: string;
     gratEscolaridade?: string;
     warnings?: string[];
+    uiWarnings?: string[];
     vinculo?: string;
     basePrevidencia?: string;
     tipoFolha?: string;

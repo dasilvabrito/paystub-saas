@@ -28,7 +28,7 @@ export default function LoginPage() {
         try {
             const success = await login(email, password);
             if (success) {
-                router.push("/");
+                router.push("/intranet");
             } else {
                 setError("Credenciais inválidas. Tente novamente.");
             }

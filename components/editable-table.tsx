@@ -21,8 +21,16 @@ export function EditableTable({
 
     const handleEdit = (index: number, field: keyof ExtractedData, value: string, subField?: 'info' | 'valor') => {
         const newData = [...data];
-        if (subField && typeof newData[index][field] === 'object') {
-            (newData[index][field] as any)[subField] = value;
+
+        if (subField) {
+            // Initialize object if missing (e.g. manually adding Aulas)
+            if (!newData[index][field]) {
+                (newData[index] as any)[field] = { info: '', valor: '' };
+            }
+
+            if (typeof newData[index][field] === 'object') {
+                (newData[index][field] as any)[subField] = value;
+            }
         } else {
             (newData[index] as any)[field] = value;
         }

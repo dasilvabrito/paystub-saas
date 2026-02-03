@@ -105,7 +105,8 @@ export const generateAuditReport = (
             infoAulas,
             valorAulasPago,
             devidas,
-            diferenca
+            diferenca,
+            uiWarnings: row.uiWarnings
         };
     });
 
@@ -121,7 +122,8 @@ export const generateAuditReport = (
             tableBody.push({
                 ...lastRow,
                 mesAno: `${currentMesAno} (Vincenda ${i})`,
-                valorAulasPago: lastRow.valorAulasPago
+                valorAulasPago: lastRow.valorAulasPago,
+                uiWarnings: [] // Vincendas shouldn't inherit warnings
             });
         }
     }
@@ -301,6 +303,24 @@ export const generateAuditReport = (
             6: { halign: 'right' },
             7: { halign: 'right', fontStyle: 'bold' },
             8: { halign: 'right', fontStyle: 'bold' }
+        },
+        didParseCell: (data) => {
+            if (data.section === 'body') {
+                const rowIndex = data.row.index;
+                const rowData = tableBody[rowIndex];
+
+                if (rowData?.uiWarnings && rowData.uiWarnings.length > 0) {
+                    const warnings = rowData.uiWarnings;
+                    const isCritical = warnings.some(w => w.includes('Prescrição') || w.includes('Sem Aulas'));
+                    const isWarning = warnings.some(w => w.includes('Duplicada'));
+
+                    if (isCritical) {
+                        data.cell.styles.textColor = [220, 38, 38]; // Red-600
+                    } else if (isWarning) {
+                        data.cell.styles.textColor = [217, 119, 6]; // Amber-600
+                    }
+                }
+            }
         }
     });
 
